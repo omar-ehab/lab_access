@@ -7,7 +7,7 @@ const store_access = async (req, res) => {
 
     const data = {
         student_id: req.body.student_id,
-        lab_id: req.body.lab_id,
+        lab_name: req.body.lab_name,
         entered_at: new Date()
     }
     try{
@@ -22,7 +22,7 @@ const store_access = async (req, res) => {
 
 const get_distincet_labs = async (req, res, next) => {
     try{
-        const data = await labAccess.aggregate('lab_id', 'DISTINCT', { plain: false});
+        const data = await labAccess.aggregate('lab_name', 'DISTINCT', { plain: false});
         const labs = [];
         data.forEach((element, index) => {
             labs.push({
@@ -38,26 +38,26 @@ const get_distincet_labs = async (req, res, next) => {
 }
 
 const download_excel = async (req, res, next) => {
-    const lab_id = req.params.lab_id;
+    const lab_name = req.params.lab_name;
     try{
         //this code is for getting data from database
-        const data = await labAccess.findAll({ where: generate_condition_object(lab_id, req.body)});
+        const data = await labAccess.findAll({ where: generate_condition_object(lab_name, req.body) });
 
         //this code is for generating excel
         const workbook = new ExcelJS.Workbook();
-        const sheet = workbook.addWorksheet('lab_id');
+        const sheet = workbook.addWorksheet('lab_name');
         sheet.addRow(['id', 'student id', 'lab', 'entrance date']);
         data.forEach((item, index) => {
             sheet.addRow([
                 index + 1,
                 item.student_id,
-                item.lab_id,
+                item.lab_name,
                 item.entered_at
             ]);
         });
 
         //this code for download excel
-        res.attachment(`${lab_id}.xlsx`);
+        res.attachment(`${lab_name}.xlsx`);
         workbook.xlsx.write(res).then(() => {
             res.end();
         });
@@ -68,8 +68,8 @@ const download_excel = async (req, res, next) => {
      
 }
 
-const generate_condition_object = (lab_id, data) => {
-    let obj = {lab_id};
+const generate_condition_object = (lab_name, data) => {
+    let obj = {lab_name};
 
     if(data.from !== undefined && data.to !== undefined) {
         obj.entered_at = {
